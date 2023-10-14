@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html data-theme="emerald">
+<head>
+    <title>Archived Data</title>
+    <link href="/assets/compressed.css" rel="stylesheet" type="text/css" />
+    <script src="/assets/tailwind.css"></script>
+    <script src="/assets/main.js"></script>
+</head>
+<body class="xl:container xl:mx-auto">
+        <div class=" mt-5 w-full justify-between xl:px-0 px-10 flex space-x-5  ">
+
+            <a href="/"  class="btn btn-secondary text-white" >Go Back</a>
+            <button  onclick="location.reload(true)" class="btn btn-neutral text-white" >Reload</button>
+        
+        </div>
+    {{ range .archivedData }}
+    <div class="mb-20 mt-5">
+<h2 class="text-3xl text-center font-bold mb-3">{{ .Date }}</h2>
+<div class="overflow-x-auto xl:container mx-auto ">
+    <table class="table table-zebra">
+        <thead>
+            <tr class="text-base">
+                <th>No</th>
+                <th>Batch No</th>
+                <th>Start Time</th>
+                <th>Running Hours</th>
+                <th>Stop Time</th>
+                <th>Stopped Time</th>
+                <th>Location</th>
+                <th>Remark</th>
+
+            </tr>
+        </thead>
+        {{ range .Data }}
+        <tr class="text-base">
+            <td>{{ .No1 }}</td>
+            <td>{{ .No2 }}</td>
+            <td value="{{ .StartTime.Format "2006-01-02 15:04:05" }}">{{ .StartTime.Format "02-01 | 03:04 PM" }}</td>
+            <td class="running-hours">{{ .RunningHours }}</td>
+            <td value="{{ .StopTime.Format "2006-01-02 15:04:05" }}">{{ .StopTime.Format "02-01 | 03:04 PM" }}</td>
+            <td value="{{ if .StoppedTime }}{{ .StoppedTime.Format "2006-01-02 15:04:05" }}{{ end }}">
+                {{ if .StoppedTime }}{{ .StoppedTime.Format "02-01 03:04 PM" }}{{ end }}
+            </td>
+            <td>{{ .Location }}</td>
+            <td class="max-w-[200px]">
+                {{ if .Remark }}{{ .Remark }}{{ end }}
+            </td>
+        </tr>
+        {{ end }}
+    </table>
+</div>
+</div>
+{{ end }}
+</body>
+
+<script>
+    $(document).ready(function() {
+        $('.running-hours').each(function(index, element) {
+            var runningHours = parseFloat($(element).text()); 
+            var hours = Math.floor(runningHours); 
+            var minutes = Math.round((runningHours - hours) * 60);  
+            $(element).text(hours + ' hour' + (hours !== 1 ? 's' : '') + ' ' + minutes + ' minute' + (minutes !== 1 ? 's' : ''));
+        });
+
+    });
+</script>
+</html>

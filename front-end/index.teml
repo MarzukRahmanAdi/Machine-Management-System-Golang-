@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html data-theme="emerald">
+    <script >
+            const Update_Time = 1 // --------------------------- Change this to change the update timer ---------------------------------------------
+    </script>
+<head>
+    <title>Data Table</title>
+    <link href="/assets/compressed.css" rel="stylesheet" type="text/css" />
+    <script src="/assets/tailwind.css"></script>
+    <script src="/assets/main.js"></script>
+</head>
+
+<style>
+  
+</style>
+<body class="">
+<div class=" absolute flex space-x-10 right-5 top-5">
+<button class="btn btn-success text-white" onclick="my_modal_1.showModal()">Add a machine</button>
+<a href="/archieve"  target="_blank" class="btn btn-secondary text-white" >Check Archive</a>
+</div>
+
+
+<!-- toast -->
+<div class="toast z-50  toast-end">
+
+</div>
+   
+    <div class="overflow-x-auto container mx-auto   my-32">
+        <table class="table table-zebra">
+            <thead>
+            <tr class="text-base">
+                <!-- <th>ID</th> -->
+                <th>No</th>
+                <th>Batch No</th>
+                <th>Start Time</th>
+                <th>Running Hours</th>
+                <th>Stop Time</th>
+                <th>Location </th>
+                <th>Progress </th>
+                <th>Stop </th>
+                <th>Remark </th>
+
+                </tr>
+        </thead>
+            {{ range .data }}
+            <tr class=" text-base">
+                <!-- <td>{{ .ID }}</td> -->
+                <td>{{ .No1 }}</td>
+                <td>{{ .No2 }}</td>
+                <td value="{{ .StartTime.Format "2006-01-02 \n 15:04:05" }}">{{ .StartTime.Format "02-01 03:04 PM" }}</td>
+                <td  class="running-hours">{{ .RunningHours }}</td>
+                <td value="{{ .StopTime.Format "2006-01-02 \n 15:04:05" }}">{{ .StopTime.Format "02-01 03:04 PM" }}</td>
+                <td>{{ .Location }}</td>
+                <td>
+                    <progress class="progress progress-secondary h-5  w-56" value="120" max="100"></progress>
+                </td>
+                <td>
+                    {{ if not .Stopped }}
+                    <button class="cursor-pointer stop-button btn btn-error text-white" data-id="{{ .ID }}">Stop</button>
+                    {{ end }}
+                </td>
+                <td class="">
+                    {{ if .Remark }}{{ .Remark }}{{ end }}
+                </td>
+            </tr>
+            {{ end }}
+        </table>
+    </div>
+  
+<dialog id="my_modal_1" class="modal">
+  <div class="modal-box">
+    <form method="dialog">
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      </form>
+    <form action="/add-data" class="text-black " method="post">
+        <h2 class="text-3xl font-bold">Add New Machine </h2>
+        <div class="flex inputbox space-y-5 mt-5 flex-col items-center">
+
+        <div class="w-full">
+            <label for="no1">No<sub class="text-gray-500">1</sub> :</label>
+            <input required type="text" class="input input-bordered w-full " name="no1">
+        
+        </div>
+        <div class="w-full">
+            <label for="no2">Batch No<sub class="text-gray-500">2</sub> :</label>
+            <input required class="input input-bordered w-full " type="text" name="no2">
+        </div>
+        <div class="w-full">
+            <label for="startTime">Start Time </label>
+            <input id="startTimeInput"  required class="input input-bordered w-full " type="time" name="startTime">
+        </div>
+        <div  class="w-full">
+            
+            <label for="runningHours">Running Hours:</label>
+            <div class="flex space-x-5">
+
+                <div>
+                    <label for="hours">Hours:</label>
+                    <input required class="input input-bordered w-full " type="number" value="00" name="hours" id="hoursInput" min="0" max="100">
+                </div>
+                
+                <div>
+                    <label for="minutes">Minutes:</label>
+                    <input required class="input input-bordered w-full " type="number" name="minutes" id="minutesInput" min="0" max="59" value="0">
+                </div>
+            </div>
+            
+        </div>
+        <div class="w-full">
+            
+            <label for="location">Location:</label>
+            <input required class="input input-bordered w-full " type="text" name="location"><br>
+        </div>
+        <div class="w-full">
+            
+            <label for="location">Remark:</label>
+            <textarea required class="input input-bordered w-full " type="text" name="remark"> </textarea>  
+        </div>
+
+        <input class="btn w-32 hover:text-white btn-primary bg-accent-900" type="submit" value="Add">
+    </div>
+
+    </form>
+    </div>
+  </div>
+
+</dialog>
+    
+</body>
+
+
+<script>
+    $(document).ready(function() {
+        $('.running-hours').each(function(index, element) {
+            var runningHours = parseFloat($(element).text()); 
+            var hours = Math.floor(runningHours); 
+            var minutes = Math.round((runningHours - hours) * 60);  
+            $(element).text(hours + ' hour' + (hours !== 1 ? 's' : '') + ' ' + minutes + ' minute' + (minutes !== 1 ? 's' : ''));
+        });
+
+        $('.stop-button').click(function() {
+            var dataId = $(this).data('id');
+
+            $.ajax({
+                type: "POST",
+                url: "/stop-data", 
+                data: { id: dataId },
+                success: function(response) {
+                    if (response.success) {
+                      
+                        $(this).closest('tr').find('.running-hours').text('Stopped');
+                        $(this).remove(); 
+                        location.reload(true)
+                    }
+                }
+            });
+        });
+        var currentTime = new Date();
+        var formattedTime = currentTime.toTimeString().slice(0, 5);
+        $('#startTimeInput').val(formattedTime);
+    });
+   
+    function updateProgressBars() {
+        var currentTime = new Date().getTime();
+
+        $('.progress').each(function(index, element) {
+            var row = $(element).closest('tr');
+            var startTimeValue = row.find('td:nth-child(3)').attr('value');
+            var stopTimeValue = row.find('td:nth-child(5)').attr('value');
+
+            var startTime = new Date(startTimeValue);
+            var stopTime = new Date(stopTimeValue);
+            var totalDuration = stopTime - startTime;
+            var elapsed = currentTime - startTime;
+            var progress = (elapsed / totalDuration) * 100;
+
+            $(element).attr('value', progress);
+            
+
+            if (progress > 100) {
+                $(element).removeClass('progress-secondary').addClass('progress-error');
+                var no1 = row.find('td:nth-child(1)').text();
+            var no2 = row.find('td:nth-child(2)').text();
+            var location = row.find('td:nth-child(6)').text();
+
+            var toastId = `${no1}-${no2}-${location}`;
+
+            if (document.getElementById(toastId) === null) {
+                showToast(toastId, `No1: ${no1}, Batch: ${no2}, Location: ${location} has finished.`);
+            }
+            }
+        });
+    }
+
+
+
+function showToast(id, message) {
+    var toastContainer = $('.toast');
+    var alert = $(`<div class="alert text-white bg-red-600 alert-error" id="${id}"></div>`);
+    
+    var closeBtn = $('<button class="btn text-3xl">×</button>');
+    closeBtn.click(function() {
+        $(`#${id}`).hide();
+    });
+    var svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    var messageSpan = `<span>${svgIcon} ${message}</span>`;
+
+    alert.append(messageSpan);
+    alert.append(closeBtn);
+
+    toastContainer.append(alert);
+}
+
+
+    updateProgressBars();
+
+    setInterval(function() {
+        updateProgressBars();
+    }, Update_Time* 1000);
+
+</script>
+    
+   
+
+</html>
